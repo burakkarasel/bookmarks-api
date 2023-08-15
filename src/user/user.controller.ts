@@ -6,6 +6,8 @@ import {
   UseGuards,
   Delete,
   NotFoundException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtGuard } from 'src/auth/guard';
@@ -32,11 +34,12 @@ export class UserController {
     return user;
   }
 
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete()
   async deleteUser(@GetUser('id') userId: number) {
     const deletedId = await this.userService.deleteUser(userId);
     if (deletedId) {
-      return { message: 'OK' };
+      return;
     }
     return new NotFoundException('User not found');
   }

@@ -10,7 +10,6 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
-  NotFoundException,
 } from '@nestjs/common';
 import { JwtGuard } from 'src/auth/guard';
 import { BookmarkService } from './bookmark.service';
@@ -48,7 +47,6 @@ export class BookmarkController {
     @Param('bookmarkId', ParseIntPipe) bookmarkId: number,
     @Body() dto: BookmarkDto,
   ) {
-    console.log(dto);
     const updatedBookmark = await this.bookmarkService.updateBookmark(
       bookmarkId,
       dto,
@@ -58,11 +56,7 @@ export class BookmarkController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':bookmarkId')
-  async deleteBookmark(@Param('bookmarkId', ParseIntPipe) bookmarkId: number) {
-    const deletedId = await this.bookmarkService.deleteBookmark(bookmarkId);
-    if (deletedId) {
-      return;
-    }
-    throw new NotFoundException('Bookmark not found');
+  deleteBookmark(@Param('bookmarkId', ParseIntPipe) bookmarkId: number) {
+    this.bookmarkService.deleteBookmark(bookmarkId);
   }
 }

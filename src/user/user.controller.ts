@@ -5,7 +5,6 @@ import {
   Patch,
   UseGuards,
   Delete,
-  NotFoundException,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -37,10 +36,6 @@ export class UserController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete()
   async deleteUser(@GetUser('id') userId: number) {
-    const deletedId = await this.userService.deleteUser(userId);
-    if (deletedId) {
-      return;
-    }
-    return new NotFoundException('User not found');
+    await this.userService.deleteUser(userId);
   }
 }

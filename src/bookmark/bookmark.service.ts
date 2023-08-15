@@ -1,28 +1,43 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BookmarkDto } from './dto/bookmark.dto';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class BookmarkService {
   constructor(private prismaService: PrismaService) {}
 
-  createBookmark(userId: number, dto: BookmarkDto) {
-    return this.prismaService.bookmark.create({
-      data: {
-        userId,
-        title: dto.title,
-        link: dto.link,
-        description: dto.description,
-      },
-    });
+  async createBookmark(userId: number, dto: BookmarkDto) {
+    try {
+      await this.prismaService.bookmark.create({
+        data: {
+          userId,
+          title: dto.title,
+          link: dto.link,
+          description: dto.description,
+        },
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2003') {
+          throw new NotFoundException("User doesn't exists");
+        }
+      }
+      throw error;
+    }
   }
 
-  getBookmarkById(bookmarkId: number) {
-    return this.prismaService.bookmark.findUnique({
+  async getBookmarkById(bookmarkId: number) {
+    const bookmark = await this.prismaService.bookmark.findUnique({
       where: {
         id: bookmarkId,
       },
     });
+
+    if (bookmark) {
+      return bookmark;
+    }
+    throw new NotFoundException('Bookmark not found');
   }
 
   listBookmarksOfUser(userId: number) {
@@ -33,27 +48,43 @@ export class BookmarkService {
     });
   }
 
-  updateBookmark(bookmarkId: number, dto: BookmarkDto) {
-    return this.prismaService.bookmark.update({
-      where: {
-        id: bookmarkId,
-      },
-      data: {
-        title: dto.title,
-        description: dto.description,
-        link: dto.link,
-      },
-    });
+  async updateBookmark(bookmarkId: number, dto: BookmarkDto) {
+    try {
+      const updatedBookmark = await this.prismaService.bookmark.update({
+        where: {
+          id: bookmarkId,
+        },
+        data: {
+          title: dto.title,
+          description: dto.description,
+          link: dto.link,
+        },
+      });
+      return updatedBookmark;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException('Bookmark not found');
+        }
+      }
+      throw error;
+    }
   }
 
-  deleteBookmark(bookmarkId: number) {
-    return this.prismaService.bookmark.delete({
-      where: {
-        id: bookmarkId,
-      },
-      select: {
-        id: true,
-      },
-    });
+  async deleteBookmark(bookmarkId: number) {
+    try {
+      await this.prismaService.bookmark.delete({
+        where: {
+          id: bookmarkId,
+        },
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException('Bookmark not found');
+        }
+      }
+      throw error;
+    }
   }
 }

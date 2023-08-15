@@ -1,8 +1,17 @@
-import { Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  UseGuards,
+  Delete,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtGuard } from 'src/auth/guard';
 import { GetUser } from 'src/auth/decorator';
 import { User } from '@prisma/client';
+import { UpdateUserRequest } from './dto';
 
 @UseGuards(JwtGuard)
 @Controller('api/v1/users')
@@ -15,7 +24,20 @@ export class UserController {
   }
 
   @Patch()
-  async updateUserDetails(@GetUser('id') userId: number) {
-    return { userId };
+  async updateUserDetails(
+    @GetUser('id') userId: number,
+    @Body() dto: UpdateUserRequest,
+  ) {
+    const user = await this.userService.updateUserDetails(userId, dto);
+    return user;
+  }
+
+  @Delete()
+  async deleteUser(@GetUser('id') userId: number) {
+    const deletedId = await this.userService.deleteUser(userId);
+    if (deletedId) {
+      return { message: 'OK' };
+    }
+    return new NotFoundException('User not found');
   }
 }

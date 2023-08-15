@@ -8,12 +8,10 @@ import {
   Patch,
   ParseIntPipe,
   Delete,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
-import { JwtGuard } from 'src/auth/guard';
+import { JwtGuard } from '../auth/guard';
 import { BookmarkService } from './bookmark.service';
-import { GetUser } from 'src/auth/decorator';
+import { GetUser } from '../auth/decorator';
 import { BookmarkDto } from './dto/bookmark.dto';
 
 @UseGuards(JwtGuard)
@@ -54,9 +52,9 @@ export class BookmarkController {
     return updatedBookmark;
   }
 
-  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':bookmarkId')
-  deleteBookmark(@Param('bookmarkId', ParseIntPipe) bookmarkId: number) {
-    this.bookmarkService.deleteBookmark(bookmarkId);
+  async deleteBookmark(@Param('bookmarkId', ParseIntPipe) bookmarkId: number) {
+    await this.bookmarkService.deleteBookmark(bookmarkId);
+    return { message: 'OK' };
   }
 }

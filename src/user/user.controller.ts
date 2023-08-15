@@ -5,12 +5,10 @@ import {
   Patch,
   UseGuards,
   Delete,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { JwtGuard } from 'src/auth/guard';
-import { GetUser } from 'src/auth/decorator';
+import { JwtGuard } from '../auth/guard';
+import { GetUser } from '../auth/decorator';
 import { User } from '@prisma/client';
 import { UpdateUserRequest } from './dto';
 
@@ -33,9 +31,9 @@ export class UserController {
     return user;
   }
 
-  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete()
   async deleteUser(@GetUser('id') userId: number) {
     await this.userService.deleteUser(userId);
+    return { message: 'OK' };
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { BookmarkDto } from './dto/bookmark.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
@@ -9,7 +9,7 @@ export class BookmarkService {
 
   async createBookmark(userId: number, dto: BookmarkDto) {
     try {
-      await this.prismaService.bookmark.create({
+      const bookmark = await this.prismaService.bookmark.create({
         data: {
           userId,
           title: dto.title,
@@ -17,6 +17,8 @@ export class BookmarkService {
           description: dto.description,
         },
       });
+
+      return bookmark;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2003') {

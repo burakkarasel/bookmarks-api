@@ -8,6 +8,8 @@ import {
   Patch,
   ParseIntPipe,
   Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { BookmarkService } from './bookmark.service';
@@ -29,8 +31,14 @@ export class BookmarkController {
   }
 
   @Get(':bookmarkId')
-  async getBookmarkById(@Param('bookmarkId', ParseIntPipe) bookmarkId: number) {
-    const bookmark = await this.bookmarkService.getBookmarkById(bookmarkId);
+  async getBookmarkById(
+    @GetUser('id') userId: number,
+    @Param('bookmarkId', ParseIntPipe) bookmarkId: number,
+  ) {
+    const bookmark = await this.bookmarkService.getBookmarkById(
+      userId,
+      bookmarkId,
+    );
     return bookmark;
   }
 
@@ -42,19 +50,25 @@ export class BookmarkController {
 
   @Patch(':bookmarkId')
   async updateBookmarkDetails(
+    @GetUser('id') userId: number,
     @Param('bookmarkId', ParseIntPipe) bookmarkId: number,
     @Body() dto: BookmarkDto,
   ) {
     const updatedBookmark = await this.bookmarkService.updateBookmark(
+      userId,
       bookmarkId,
       dto,
     );
     return updatedBookmark;
   }
 
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':bookmarkId')
-  async deleteBookmark(@Param('bookmarkId', ParseIntPipe) bookmarkId: number) {
-    await this.bookmarkService.deleteBookmark(bookmarkId);
+  async deleteBookmark(
+    @GetUser('id') userId: number,
+    @Param('bookmarkId', ParseIntPipe) bookmarkId: number,
+  ) {
+    await this.bookmarkService.deleteBookmark(userId, bookmarkId);
     return { message: 'OK' };
   }
 }

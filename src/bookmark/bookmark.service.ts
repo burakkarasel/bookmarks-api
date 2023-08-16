@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookmarkDto } from './dto/bookmark.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -29,17 +33,21 @@ export class BookmarkService {
     }
   }
 
-  async getBookmarkById(bookmarkId: number) {
+  async getBookmarkById(userId: number, bookmarkId: number) {
     const bookmark = await this.prismaService.bookmark.findUnique({
       where: {
         id: bookmarkId,
       },
     });
 
-    if (bookmark) {
-      return bookmark;
+    if (!bookmark) {
+      throw new NotFoundException('Bookmark not found');
     }
-    throw new NotFoundException('Bookmark not found');
+
+    if (bookmark.userId !== userId) {
+      throw new ForbiddenException('Forbidden action');
+    }
+    return bookmark;
   }
 
   listBookmarksOfUser(userId: number) {
@@ -50,7 +58,7 @@ export class BookmarkService {
     });
   }
 
-  async updateBookmark(bookmarkId: number, dto: BookmarkDto) {
+  async updateBookmark(userId: number, bookmarkId: number, dto: BookmarkDto) {
     try {
       const updatedBookmark = await this.prismaService.bookmark.update({
         where: {
@@ -62,6 +70,15 @@ export class BookmarkService {
           link: dto.link,
         },
       });
+
+      if (!updatedBookmark) {
+        throw new NotFoundException('Bookmark not found');
+      }
+
+      if (updatedBookmark.userId !== userId) {
+        throw new ForbiddenException('Forbidden action');
+      }
+
       return updatedBookmark;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -73,8 +90,22 @@ export class BookmarkService {
     }
   }
 
-  async deleteBookmark(bookmarkId: number) {
+  async deleteBookmark(userId: number, bookmarkId: number) {
     try {
+      const bookmark = await this.prismaService.bookmark.findUnique({
+        where: {
+          id: bookmarkId,
+        },
+      });
+
+      if (!bookmark) {
+        throw new NotFoundException('Bookmark not found');
+      }
+
+      if (bookmark.userId !== userId) {
+        throw new ForbiddenException('Forbidden action');
+      }
+
       await this.prismaService.bookmark.delete({
         where: {
           id: bookmarkId,

@@ -301,7 +301,9 @@ describe('App e2e', () => {
             Authorization: 'Bearer $S{userAt}',
           })
           .withBody(happyBody)
-          .expectStatus(200);
+          .expectStatus(200)
+          .expectBodyContains(happyBody.firstName)
+          .expectBodyContains(happyBody.lastName);
       });
     });
   });
@@ -385,6 +387,22 @@ describe('App e2e', () => {
           .expectStatus(400);
       });
 
+      //! SHOULD FAIL
+      it('should fail invalid description', () => {
+        return pactum
+          .spec()
+          .post(`/bookmarks`)
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .withBody({
+            description: 3,
+            link: happyBody.link,
+            title: happyBody.title,
+          })
+          .expectStatus(400);
+      });
+
       //* SHOULD PASS
       it('should pass create bookmark', () => {
         return pactum
@@ -395,6 +413,9 @@ describe('App e2e', () => {
           })
           .withBody(happyBody)
           .expectStatus(201)
+          .expectBodyContains(happyBody.description)
+          .expectBodyContains(happyBody.link)
+          .expectBodyContains(happyBody.title)
           .stores('bmId', 'id');
       });
     });
@@ -413,7 +434,8 @@ describe('App e2e', () => {
           .withHeaders({
             Authorization: 'Bearer $S{userAt}',
           })
-          .expectStatus(200);
+          .expectStatus(200)
+          .expectJsonLength(1);
       });
     });
 
@@ -536,6 +558,22 @@ describe('App e2e', () => {
       });
 
       //! SHOULD FAIL
+      it('should fail invalid description', () => {
+        return pactum
+          .spec()
+          .patch(`/bookmarks/$S{bmId}`)
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .withBody({
+            description: 3,
+            link: happyBody.link,
+            title: happyBody.title,
+          })
+          .expectStatus(400);
+      });
+
+      //! SHOULD FAIL
       it('should fail invalid id', () => {
         return pactum
           .spec()
@@ -569,6 +607,9 @@ describe('App e2e', () => {
           })
           .withBody(happyBody)
           .expectStatus(200)
+          .expectBodyContains(happyBody.description)
+          .expectBodyContains(happyBody.title)
+          .expectBodyContains(happyBody.link)
           .stores('bmId', 'id');
       });
     });
